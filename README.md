@@ -117,6 +117,6 @@ mcars-rplumber-predictor-c45999fbd-jr49f kserve-container Running swagger Docs a
 Call the R model to predict the miles per gallon for a 5000 lb car
 
 ```bash
- curl -X 'GET' 'https://mcars-rplumber-predictor-llama-serving.apps.sno.sandbox1005.opentlc.com/mpg?weight=5'   -H 'accept: application/json'
+ curl -X 'GET' 'https://mcars-rplumber-predictor-llama-serving.apps.sno.sandbox1005.opentlc.com/mpg?weight=5' -H 'accept: application/json'
 [10.5628]
 ```
