@@ -1,0 +1,3 @@
+FROM docker.io/rstudio/plumber:latest
+ENV HOME=/mnt/models
+CMD [ "~/plumber.R" ]

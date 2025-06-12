@@ -1,0 +1,5 @@
+FROM registry.access.redhat.com/ubi9/ubi-micro:9.5
+RUN mkdir /models
+COPY my_fit.rds /models/my_fit.rds
+COPY model.R /models/plumber.R
+USER 1001

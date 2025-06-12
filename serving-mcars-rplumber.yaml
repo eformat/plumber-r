@@ -1,0 +1,104 @@
+---
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  annotations:
+    opendatahub.io/apiProtocol: REST
+    opendatahub.io/template-display-name: RPlumber
+    opendatahub.io/template-name: rplumber
+    openshift.io/display-name: mcars-rplumber
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  labels:
+    opendatahub.io/dashboard: "true"
+  name: mcars-rplumber
+  namespace: llama-serving
+spec:
+  containers:
+  - image: quay.io/eformat/plumber-runtime:latest
+    imagePullPolicy: Always
+    name: kserve-container
+    ports:
+    - containerPort: 8000
+      protocol: TCP
+    resources:
+      requests:
+        cpu: 300m
+        memory: 500Mi
+  multiModel: false
+  supportedModelFormats:
+  - autoSelect: true
+    name: rds
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  annotations:
+    openshift.io/display-name: mcars-rplumber
+    serving.kserve.io/deploymentMode: RawDeployment
+    serving.kserve.io/enable-prometheus-scraping: "true"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: "4"
+    argocd.argoproj.io/compare-options: IgnoreExtraneous
+  labels:
+    opendatahub.io/dashboard: "true"
+  name: mcars-rplumber
+  namespace: llama-serving
+spec:
+  predictor:
+    minReplicas: 1
+    model:
+      modelFormat:
+        name: rds
+      name: ""
+      # resources:
+      #   limits:
+      #     nvidia.com/gpu: "1"
+      #   requests:
+      #     nvidia.com/gpu: "1"
+      runtime: mcars-rplumber
+      storageUri: oci://quay.io/eformat/mcars-plumber:latest
+    tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: plumber-cars
+  namespace: llama-serving
+  labels:
+    opendatahub.io/dashboard: 'true'
+  annotations:
+    opendatahub.io/connection-type-ref: uri-v1
+    openshift.io/description: plumber-cars
+    openshift.io/display-name: plumber-cars
+    argocd.argoproj.io/sync-wave: "2"
+stringData:
+  URI: oci://quay.io/eformat/mcars-plumber:latest
+type: Opaque
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: mcars-rplumber-predictor
+  namespace: llama-serving
+  labels:
+    app: isvc.mcars-rplumber-predictor
+    component: predictor
+    opendatahub.io/dashboard: 'true'
+    serving.kserve.io/inferenceservice: mcars-rplumber
+spec:
+  to:
+    kind: Service
+    name: mcars-rplumber-predictor
+    weight: 100
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+status: {}
