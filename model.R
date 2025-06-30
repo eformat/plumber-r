@@ -10,7 +10,7 @@ hello <- function(){
 #* @get /mpg
 #* @serializer json
 mpg <- function(weight){
-    newcar = data.frame(wt=as.integer(weight))
+    newcar = data.frame(wt=as.double(weight))
     # predict the gas consumption
     return(predict(model, newcar))
 }
